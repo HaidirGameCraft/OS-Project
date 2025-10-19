@@ -26,7 +26,7 @@ void alloc_initialize() {
 void* malloc( size_t size ) {
     memory_block_t* current = heap_start;
     while( current != 0 ) {
-        printf("%x: Heap Current size %x, Heap required %x\n", (u32) current, current->size, size );
+        //printf("%x: Heap Current size %x, Heap required %x\n", (u32) current, current->size, size );
         if( current->free && size + sizeof( memory_block_t ) <= current->size ) {
             u32 remained_size = current->size - size - sizeof( memory_block_t );
 

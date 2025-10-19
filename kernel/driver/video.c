@@ -42,6 +42,25 @@ void VideoPutC( char __char ) {
         VideoScroll();
         return;
     }
+    else if ( __char == 0x08 ) 
+    {
+        index = text_columns + text_lines * max_char_width;
+        index--;
+        text_columns = index % max_char_width;
+        text_lines = (u32)( index / max_char_width);
+
+        // Backspace
+        for(int i = 0; i < 16; i++) {
+            for(int j = 0; j < 8; j++) {
+                int idx = ((text_columns * 8 + j) + (text_lines * 16 + i) * video_mode.width) * video_mode.bits_per_pixel / 8;
+                framebuffer[ idx + 0 ] = 0x00;
+                framebuffer[ idx + 1 ] = 0x00;
+                framebuffer[ idx + 2 ] = 0x00;
+            }
+        } 
+
+        return;
+    }
 
     const u8* char_bitmap = font_getcharbitmap( __char );
     for(int i = 0; i < 16; i++)
