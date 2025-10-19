@@ -47,7 +47,9 @@ KERNEL_ASM_SOURCES=$(wildcard 	${KERNEL_DIR}/*.asm \
 KERNEL_ASM_OBJECTS=$(patsubst $(KERNEL_DIR)/%.asm,${BUILD_DIR}/kernel.dir/%.asm.o,${KERNEL_ASM_SOURCES})
 
 build: make_dir compile_kernel boot_builder boot_stage_build
-	make mbr_build_disk
+	make -C ./tools/disk/
+#	make mbr_build_disk
+	make build_disk
 	make run_test
 
 build_os:
@@ -55,7 +57,7 @@ build_os:
 	grub2-mkrescue -o $(OUTPUT_OS) os
 
 compile_kernel: $(KERNEL_ASM_OBJECTS) $(KERNEL_C_OBJECTS)
-	$(LD_LINKER) -m $(LD_TYPE) -T kernel/linker.ld -o os/boot/kernel.elf $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
+	$(LD_LINKER) -m $(LD_TYPE) -T kernel/linker.ld -o build/kernel.elf $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
 
 $(BUILD_DIR)/kernel.dir/%.c.o: $(KERNEL_DIR)/%.c
 	$(C_COMPILER) $(C_FLAGS) $(KERNEL_INCLUDEDIR) -o $@ -c $<
@@ -80,6 +82,7 @@ make_build_kernel_dir:
 
 clean:
 	rm -rf build
+	rm -rf data.img bootvol.img os.img
 
 # BOOT Builder
 boot_builder:
@@ -97,11 +100,22 @@ $(BUILD_DIR)/boot.stage.dir/%.asm.o: $(BOOT_STAGE_DIR)/%.asm
 	$(NASM_COMPILER) $(NASM_FLAGS) -o $@ $<
 
 build_disk:
-	dd if=/dev/zero of=$(OUTPUT_OS) bs=$(BSS_COUNT) count=$(SIZE_DISK)
-	mkfs.fat -F32 -R 50 $(OUTPUT_OS)
-	dd if=$(BUILD_DIR)/boot.dir/boot.bin of=$(OUTPUT_OS) bs=1 seek=90 skip=90 count=420 conv=notrunc
-	dd if=$(BUILD_DIR)/boot.dir/loadstage.bin of=$(OUTPUT_OS) bs=512 seek=3 conv=notrunc
-	mcopy -i $(OUTPUT_OS) $(BUILD_DIR)/boot.stage.dir/bootstage.bin ::BOOTX32.BIN
+	./tools/disk/disk --create --bs 1048576 --count 128 --output ./os.img
+	dd if=/dev/zero of=./bootvol.img bs=512 count=40960
+	dd if=/dev/zero of=./data.img bs=512 count=131720
+
+	mkfs.fat -F 16 -R 5 -n "BootVol" ./bootvol.img
+	mkfs.fat -F 32 -n "Data" ./data.img
+
+	dd if=$(BUILD_DIR)/boot.dir/boot.bin of=./bootvol.img bs=1 seek=62 skip=62 count=448 conv=notrunc
+	dd if=$(BUILD_DIR)/boot.dir/loadstage.bin of=./bootvol.img bs=512 seek=3 conv=notrunc
+	mcopy -i ./bootvol.img $(BUILD_DIR)/boot.stage.dir/bootstage.bin ::BOOTX32.BIN
+	mcopy -i ./bootvol.img build/kernel.elf ::KERNEL.ELF
+
+	./tools/disk/disk --open ./os.img --part boot fat16 -bs 512 -st 1 -et 40960 --data ./bootvol.img
+	./tools/disk/disk --open ./os.img --part fat32 -bs 512 -st 40961 -et 242144 --data ./data.img
+	dd if=$(BUILD_DIR)/boot.dir/mbr.bin of=$(OUTPUT_OS) bs=1 count=440 conv=notrunc
+
 
 mbr_build_disk:
 	dd if=/dev/zero of=$(OUTPUT_OS) bs=$(BSS_COUNT) count=$(SIZE_DISK)
@@ -119,7 +133,7 @@ mbr_build_disk:
 	sudo dd if=$(BUILD_DIR)/boot.dir/boot.bin of=$(DEV_LOOP)p1 bs=1 seek=62 skip=62 count=448 conv=notrunc
 	sudo dd if=$(BUILD_DIR)/boot.dir/loadstage.bin of=$(DEV_LOOP)p1 bs=512 seek=3 conv=notrunc
 	sudo mcopy -i $(DEV_LOOP)p1 $(BUILD_DIR)/boot.stage.dir/bootstage.bin ::BOOTX32.BIN
-	sudo mcopy -i $(DEV_LOOP)p1 os/boot/kernel.elf ::KERNEL.ELF
+	sudo mcopy -i $(DEV_LOOP)p1 build/kernel.elf ::KERNEL.ELF
 	
 	sudo losetup -d $(DEV_LOOP)
 

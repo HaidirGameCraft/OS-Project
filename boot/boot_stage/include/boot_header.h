@@ -2,6 +2,10 @@
 
 #include "stdint.h"
 
+/**
+ * Boot Header
+ */
+
 struct boot_header {
     u32 magic_number;
     u32 entry_start;
@@ -15,6 +19,11 @@ struct boot_flags_video_mode {
     u16 bits_per_pixel;
     u16 reserved;
 } __attribute__((packed));
+
+/**
+ * Video Mode Header
+ * Based On: https://wiki.osdev.org/VESA_Video_Modes
+ */
 
 struct video_mode_header {
     u16 attributes;

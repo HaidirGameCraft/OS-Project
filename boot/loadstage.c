@@ -106,10 +106,11 @@ void load_stage() {
     u32 root_dir_start = fat_start + fheader->sectors_per_fat * fheader->fat_number;
     u32 root_dir_size = fheader->root_dir_entries;
 
-    ((u16*) 0xb8000)[0] = 0x0F00 | ((bt_->lba_partition & 0x0F) + '0');
-    ((u16*) 0xb8000)[1] = 0x0F00 | (((bt_->lba_partition >> 4) & 0x0F) + '0');
-    ((u16*) 0xb8000)[2] = 0x0F00 | (((bt_->lba_partition >> 8) & 0x0F) + '0');
-    ((u16*) 0xb8000)[3] = 0x0F00 | (((bt_->lba_partition >> 12) & 0x0F) + '0');
+    ((u16*) 0xb8000)[0] = 0x0F00 | ( (root_dir_start & 0x0F) + '0');
+    ((u16*) 0xb8000)[1] = 0x0F00 | (((root_dir_start >> 4) & 0x0F) + '0');
+    ((u16*) 0xb8000)[2] = 0x0F00 | (((root_dir_start >> 8) & 0x0F) + '0');
+    ((u16*) 0xb8000)[3] = 0x0F00 | (((root_dir_start >> 12) & 0x0F) + '0');
+
 
     read_disk( root_dir_start, buffer );
     
@@ -186,10 +187,10 @@ void read_fat_data( struct fat_directory* dir, u32 address ) {
     else
         data_disk = fat_start + fheader->sectors_per_fat * fheader->fat_number + fheader->root_dir_entries * sizeof( struct fat_directory ) / fheader->bytes_per_sectors ;
 
-    // ((u16*) 0xb8000)[0] = 0x0F00 | ( (data_disk & 0x0F) + '0');
-    // ((u16*) 0xb8000)[1] = 0x0F00 | (((data_disk >> 4) & 0x0F) + '0');
-    // ((u16*) 0xb8000)[2] = 0x0F00 | (((data_disk >> 8) & 0x0F) + '0');
-    // ((u16*) 0xb8000)[3] = 0x0F00 | (((data_disk >> 12) & 0x0F) + '0');
+    // ((u16*) 0xb8000)[0] = 0x0F00 | ( (typeFat & 0x0F) + '0');
+    // ((u16*) 0xb8000)[1] = 0x0F00 | (((typeFat >> 4) & 0x0F) + '0');
+    // ((u16*) 0xb8000)[2] = 0x0F00 | (((typeFat >> 8) & 0x0F) + '0');
+    // ((u16*) 0xb8000)[3] = 0x0F00 | (((typeFat >> 12) & 0x0F) + '0');
 
     u32 end_of_limit = 0xFFF0;
     if( typeFat == 32 ) end_of_limit = 0x0FFFFFF0;
