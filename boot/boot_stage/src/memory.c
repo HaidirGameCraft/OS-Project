@@ -17,7 +17,7 @@ memory_block_t* heap_end = 0;
 void MemoryInitialize() {
     heap_start = (memory_block_t*) __boot_end__;
     heap_end = (memory_block_t*)( (u32) __boot_end__ + 0x10000);
-    PageMapping( (u32) heap_start, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE, 0x10000 );
+    PageMapping( (u32) heap_start, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE, 0x10000, 0);
 
     heap_start->free = 1;
     heap_start->size = 0x10000;
@@ -28,7 +28,7 @@ void* malloc( size_t size ) {
     memory_block_t* current = heap_start;
     memory_block_t* last = 0;
     while( current != 0 ) {
-        //printf("%x: Heap Current size %x, Heap required %x\n", (u32) current, current->size, size );
+        printf("%x: Heap Current size %x, Heap required %x\n", (u32) current, current->size, size );
         if( current->free && size + sizeof( memory_block_t ) <= current->size ) {
             u32 remained_size = current->size - size - sizeof( memory_block_t );
 
@@ -53,9 +53,10 @@ void* malloc( size_t size ) {
     }
 
     // Expand Malloc memory
+    printf("Expand\n");
     u32 remaining = (size + sizeof( memory_block_t ) ) - last->size;
     u32 requried_size = (u32)( remaining / MAX_PAGES ) + 1;
-    PageMapping( (u32) heap_end, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE , requried_size * MAX_PAGES);
+    PageMapping( (u32) heap_end, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE , requried_size * MAX_PAGES, 0);
     //printf("Expanded Malloc Memory %x + %x = %x\n", (u32) last, last->size, (u32) last + last->size );
     heap_end = (memory_block_t*) ((u32)( heap_end ) + requried_size + MAX_PAGES );
 

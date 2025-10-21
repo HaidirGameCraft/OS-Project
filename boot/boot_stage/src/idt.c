@@ -83,7 +83,7 @@ void idt_setentry(  int number,
                     u8 attribute) {
     idt_entry_t* entry = &idt_entries[number];
 
-    printf("Address Int Attach: 0x%x\n", offset);
+    //printf("Address Int Attach: 0x%x\n", offset);
     entry->low_offset = offset & 0xFFFF;
     entry->high_offset = (offset >> 16) & 0xFFFF;
 

@@ -54,6 +54,7 @@ extern void __irq15();
 
 extern void* isr_stub_table[];
 extern void* irq_stub_table[];
+extern void syscall_handle();
 
 void remapped_PIC();
 
@@ -71,6 +72,9 @@ void idt_initialize() {
     for(int i = 0; i < 16; i++) {
         idt_setentry(i + 32, ((u32*) irq_stub_table)[i], 0x08, 0x8E);
     }
+
+    // Setting up Syscall Interrupt
+    idt_setentry(0x80, (u32) syscall_handle, 0x08, 0x8E);
 
     idt_ptr.limit = sizeof( idt_entry_t ) * 256 - 1;
     idt_ptr.base = (u32) &idt_entries;

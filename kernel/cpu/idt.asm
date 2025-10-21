@@ -45,7 +45,7 @@ isr_handle_stub:    PUSHALL
                     POPALL
                     add esp, 8
                     sti
-                    iret
+                    iretd
 
 irq_handle_stub:    PUSHALL
                     [extern irq_handle]
@@ -53,7 +53,16 @@ irq_handle_stub:    PUSHALL
                     POPALL
                     add esp, 8
                     sti
-                    iret
+                    iretd
+
+syscall_return_val:     dw 0x00000000
+global syscall_handle
+syscall_handle:         PUSHALL
+                        [extern syscall_interrupt]
+                        call syscall_interrupt
+                        mov dword [syscall_return_val], eax
+                        POPALL
+                        iretd
 
 isr_stub 0
 isr_stub 1

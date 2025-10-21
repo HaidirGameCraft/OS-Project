@@ -122,6 +122,7 @@ void         FAT_ReadFile(VolumeInfo* volumeInfo, FATDirectory* directory, char*
         char* fat_entries = (char*) malloc( header->bytes_per_sectors );
         while( cluster < 0xFFF0 )
         {
+            printf("Cluster: %x\n", cluster);
             u32 cluster_seg = data_start + header->sectors_per_cluster * ( cluster - 2 );
             for(int i = 0; i < header->sectors_per_cluster; i++)
             {
@@ -129,8 +130,10 @@ void         FAT_ReadFile(VolumeInfo* volumeInfo, FATDirectory* directory, char*
                 buffer += header->bytes_per_sectors;
             }
 
-            u32 fat_index = (u32)( cluster / ( entries_per_sector ) );
-            u16 fat_offset = cluster % entries_per_sector;
+            u32 fat_per_sector = header->bytes_per_sectors / 2;
+            u32 fat_index = (u32)( cluster / ( fat_per_sector ) );
+            u16 fat_offset = cluster % fat_per_sector;
+            printf("FAT (Index, Offset): (%x, %x)\n", fat_index, fat_offset);
             ReadDisk(fatStart + fat_index, fat_entries );
             cluster = ((u16*) fat_entries)[ fat_offset ];
         }

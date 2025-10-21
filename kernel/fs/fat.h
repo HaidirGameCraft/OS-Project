@@ -7,6 +7,7 @@
  * Based On: https://wiki.osdev.org/FAT#Overview
  */
 
+#include "mbr.h"
 #include <stdint.h>
 
 #define FAT_BOOTCODE_SIGNATURE      0x55AA
@@ -65,6 +66,16 @@ struct fat32_extended_boot_record {
     u16 part_signature;
 } __attribute__((packed));
 
+struct fat16_header_compact {
+    struct fat_header header;
+    struct fat_extended_boot_record boot_record;
+} __attribute__((packed));
+
+struct fat32_header_compact {
+    struct fat_header header;
+    struct fat32_extended_boot_record boot_record;
+} __attribute__((packed));
+
 struct fat_directory_t {
     u8 filename[11];
     u8 attributes;
@@ -80,6 +91,7 @@ struct fat_directory_t {
     u32 filesize;
 } __attribute__((packed));
 
+
 struct fat_long_file_name_t {
     u8 order_entry;
     u8 first_char[5];
@@ -90,4 +102,22 @@ struct fat_long_file_name_t {
     u16 zeros;
     u16 last_char[2];
 } __attribute__((packed));
+
+typedef union {
+    struct fat_header_compact;
+    struct fat32_header_compact;
+} __attribute__((packed)) fat_compact;
+
+/**
+ * OpenFATVolume()
+ */
+void                  OpenFATVolume(partition_table_t* partt);
+
+/**
+ * GetFATFile()
+ */
+struct fat_directory_t* GetFATFile(const char* filename);
+void                    ReadFATFile(struct fat_directory_t* dir, char* buffer, size_t size );
+
+
 #endif

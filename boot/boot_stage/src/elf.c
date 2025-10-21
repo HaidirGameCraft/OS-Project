@@ -27,9 +27,8 @@ void            ELF_Read( ELF32_Header* header, char* buffer ) {
         ELF32_Program* program = &program_entry[i];
         u32 v_addr = program->p_vaddr;
         u32 p_addr = program->p_paddr;
-        //printf("Virtual Address: %x\n", v_addr);
         if( v_addr == 0 )
-            continue;
+        continue;
         
         u32 status = 0;
         status = PageMappingPhysical(v_addr, p_addr, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE, program->memsize);
@@ -39,9 +38,10 @@ void            ELF_Read( ELF32_Header* header, char* buffer ) {
         //     PageMapping(v_addr, PAGE_ATTR_PRESENT | PAGE_ATTR_READWRITE, program->memsize);
         
         if( status != 0 )
-            continue;
-          
+        continue;
+        
         //((u32*) v_addr)[0] = 0x11223344;
+        //printf("Virtual Address: %x file size: %x , %x\n", v_addr, program->filesize, program->memsize);
         memcpy( (void*) v_addr, (buffer + program->p_offset), program->filesize);
         if( program->memsize > program->filesize);
             zeromem( (void*) v_addr, program->memsize - program->filesize);

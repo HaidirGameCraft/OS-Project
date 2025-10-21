@@ -11,3 +11,6 @@ build:
 # 	./disk --create --count 128 --bs 1048576 --output ./disk.img
 # 	./disk --open ./disk.img --data ./fat16.img --part boot fat16 -bs 512 -st 1 -et 65536
 # 	./disk --open ./disk.img --data ./fat32.img --part fat32 -bs 512 -st 65537 -et 262144
+
+clean:
+	rm -rf ./disk

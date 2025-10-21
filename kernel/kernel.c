@@ -7,6 +7,7 @@
 #include <page.h>
 #include <term.h>
 #include <kernel.h>
+#include <fs.h>
 #include "../boot/boot_stage/include/boot_header.h"
 
 int log_buffer_index = 0;
@@ -20,16 +21,19 @@ void kernel_main( struct boot_header* bootheader ) {
 
     InitializeVideo( (struct video_mode_header*) bootheader->video_mode_ptr);
     VideoClearScreen(0x00000000);
+
     page_initialize();
     gdt_initialize();
     idt_initialize();
     alloc_initialize();
+
     
-
     Keyboard_AddCall( keyboard_callback );
-
     printf("OS Project\n Creator By: Haidir\n");
-    printf("KERNEL START: 0x%x\nKERNEL END: 0x%x\n", (u32) __kernel_start, (u32) __kernel_end);
+    
+    // DIsk
+    OpenMBRDisk();
+    partition_table_t* partition = OpenMBRPart(0);
 
     return;
 };

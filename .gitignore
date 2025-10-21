@@ -3,3 +3,4 @@ data.img
 os.img
 .vscode/
 build/
+tools/asm-reader

@@ -14,7 +14,7 @@
 
 void    PageInitialize();
 u32     PageAlloc( );
-void    PageMapping( u32 virtual_address, u8 page_flags, size_t size );
+void    PageMapping( u32 virtual_address, u8 page_flags, size_t size, u32* page_table );
 u32     PageMappingPhysical( u32 virtual_address, u32 physical_address, u8 page_flags, size_t size );
 void    PageTableAttach(u32 address);
 void    PageTableUsed();

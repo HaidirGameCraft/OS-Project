@@ -38,12 +38,14 @@ KERNEL_DIR=kernel
 KERNEL_INCLUDEDIR=-I"kernel/"
 KERNEL_C_SOURCES=$(wildcard ${KERNEL_DIR}/*.c \
 							$(KERNEL_DIR)/driver/*.c \
-							$(KERNEL_DIR)/cpu/*.c)
+							$(KERNEL_DIR)/cpu/*.c \
+							$(KERNEL_DIR)/fs/*.c )
 KERNEL_C_OBJECTS=$(patsubst $(KERNEL_DIR)/%.c, $(BUILD_DIR)/kernel.dir/%.c.o, $(KERNEL_C_SOURCES))
 
 KERNEL_ASM_SOURCES=$(wildcard 	${KERNEL_DIR}/*.asm \
 								$(KERNEL_DIR)/driver/*.asm \
-								$(KERNEL_DIR)/cpu/*.asm)
+								$(KERNEL_DIR)/cpu/*.asm \
+								$(KERNEL_DIR)/fs/*.asm )
 KERNEL_ASM_OBJECTS=$(patsubst $(KERNEL_DIR)/%.asm,${BUILD_DIR}/kernel.dir/%.asm.o,${KERNEL_ASM_SOURCES})
 
 build: make_dir compile_kernel boot_builder boot_stage_build
@@ -57,7 +59,7 @@ build_os:
 	grub2-mkrescue -o $(OUTPUT_OS) os
 
 compile_kernel: $(KERNEL_ASM_OBJECTS) $(KERNEL_C_OBJECTS)
-	$(LD_LINKER) -m $(LD_TYPE) -T kernel/linker.ld -o build/kernel.elf $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
+	$(LD_LINKER) -m $(LD_TYPE) -nostdlib -T kernel/linker.ld -o build/kernel.elf $(KERNEL_C_OBJECTS) $(KERNEL_ASM_OBJECTS)
 
 $(BUILD_DIR)/kernel.dir/%.c.o: $(KERNEL_DIR)/%.c
 	$(C_COMPILER) $(C_FLAGS) $(KERNEL_INCLUDEDIR) -o $@ -c $<
@@ -79,10 +81,12 @@ make_dir: clean
 make_build_kernel_dir:
 	mkdir -p $(BUILD_DIR)/kernel.dir/driver
 	mkdir -p $(BUILD_DIR)/kernel.dir/cpu
+	mkdir -p $(BUILD_DIR)/kernel.dir/fs
 
 clean:
 	rm -rf build
 	rm -rf data.img bootvol.img os.img
+	make -C ./tools/disk clean
 
 # BOOT Builder
 boot_builder:
@@ -90,7 +94,7 @@ boot_builder:
 	nasm -f bin -o $(BUILD_DIR)/boot.dir/boot.bin $(BOOT_DIR)/boot.asm
 	nasm -f elf32 -o $(BUILD_DIR)/boot.dir/loadstage.asm.o $(BOOT_DIR)/load_stage.asm
 	$(C_COMPILER) $(C_FLAGS) -m32 -o $(BUILD_DIR)/boot.dir/loadstage.c.o -c $(BOOT_DIR)/loadstage.c
-	ld -m elf_i386 -T boot/loadstage.ld -o $(BUILD_DIR)/boot.dir/loadstage.bin $(BUILD_DIR)/boot.dir/loadstage.asm.o $(BUILD_DIR)/boot.dir/loadstage.c.o --oformat binary
+	ld -nostdlib -m elf_i386 -T boot/loadstage.ld -o $(BUILD_DIR)/boot.dir/loadstage.bin $(BUILD_DIR)/boot.dir/loadstage.asm.o $(BUILD_DIR)/boot.dir/loadstage.c.o --oformat binary
 # BOOT Stage
 boot_stage_build: $(BOOT_STAGE_C_OBJECTS) $(BOOT_STAGE_ASM_OBJECTS)
 	ld -m elf_i386 -T boot/bootx32.ld -o $(BUILD_DIR)/boot.stage.dir/bootstage.bin $(BOOT_STAGE_ASM_OBJECTS) $(BOOT_STAGE_C_OBJECTS) --oformat binary

@@ -1,18 +1,18 @@
 ENTRY(__start)
 SECTIONS
 {
-    . = 0x100000;
+    . = 0xC0100000;
     __kernel_start = .;
-    .text : ALIGN(4K) {
+    .text : AT(ADDR(.text) - 0xC0000000) ALIGN(4K) {
         *(.text)
     }
-    .rodata : ALIGN(4K) {
+    .rodata : AT(ADDR(.rodata) - 0xC0000000) ALIGN(4K) {
         *(.rodata)
     }
-    .data : ALIGN(4K) {
+    .data : AT(ADDR(.data) - 0xC0000000) ALIGN(4K) {
         *(.data)
     }
-    .bss : ALIGN(4K) {
+    .bss : AT(ADDR(.bss) - 0xC0000000) ALIGN(4K) {
         *(COMMON)
         *(.bss)
     }
