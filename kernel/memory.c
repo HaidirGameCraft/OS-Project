@@ -16,11 +16,11 @@ memory_block_t* heap_end = 0;
 
 void alloc_initialize() {
     heap_start = (memory_block_t*) __heap_start;
-    heap_end = (memory_block_t*) __heap_end;
+    heap_end = (memory_block_t*) __heap_start;
 
     heap_start->free = 1;
     heap_start->size = (u32) __heap_end - (u32) __heap_start;
-    heap_start->next = 0;
+    heap_start->next = NULL;
 }
 
 void* malloc( size_t size ) {
@@ -39,6 +39,9 @@ void* malloc( size_t size ) {
             new_block->free = 1;
             new_block->size = remained_size;
             new_block->next = current->next;
+
+            if( new_block->next == NULL )
+                heap_end  = new_block;
 
             current->next = new_block;
             current->size = size + sizeof( memory_block_t );
@@ -80,10 +83,18 @@ void free( void* ptr ) {
     {
         block->size += next->size;
         block->next = next->next;
+        if( block->next == NULL )
+            heap_end = block;
     }
 
     if( prev != 0 && prev->free == 1) {
         prev->size += block->size;
         prev->next = block->next;
+        if( prev->next == NULL )
+            heap_end = prev;
     }
+}
+
+void sbrk(size_t size) {
+    //TODO
 }

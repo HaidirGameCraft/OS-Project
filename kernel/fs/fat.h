@@ -17,7 +17,11 @@
 #define FAT_VOLUME_ID               0x08
 #define FAT_DIRECTORY               0x10
 #define FAT_ARCHIVE                 0X20
-#define FAT_LONGFILENAME            0x0F    
+#define FAT_LONGFILENAME            0x0F
+
+#define FAT12                       0x12
+#define FAT16                       0x16
+#define FAT32                       0x32
 
 struct fat_header {
     u8  jmp_code[3];
@@ -103,10 +107,10 @@ struct fat_long_file_name_t {
     u16 last_char[2];
 } __attribute__((packed));
 
-typedef union {
-    struct fat_header_compact;
-    struct fat32_header_compact;
-} __attribute__((packed)) fat_compact;
+union fat_compact {
+    struct fat16_header_compact fat_16;
+    struct fat32_header_compact fat_32;
+} __attribute__((packed));
 
 /**
  * OpenFATVolume()

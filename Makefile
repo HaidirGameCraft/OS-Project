@@ -39,20 +39,21 @@ KERNEL_INCLUDEDIR=-I"kernel/"
 KERNEL_C_SOURCES=$(wildcard ${KERNEL_DIR}/*.c \
 							$(KERNEL_DIR)/driver/*.c \
 							$(KERNEL_DIR)/cpu/*.c \
-							$(KERNEL_DIR)/fs/*.c )
+							$(KERNEL_DIR)/fs/*.c \
+							$(KERNEL_DIR)/process/*.c)
 KERNEL_C_OBJECTS=$(patsubst $(KERNEL_DIR)/%.c, $(BUILD_DIR)/kernel.dir/%.c.o, $(KERNEL_C_SOURCES))
 
 KERNEL_ASM_SOURCES=$(wildcard 	${KERNEL_DIR}/*.asm \
 								$(KERNEL_DIR)/driver/*.asm \
 								$(KERNEL_DIR)/cpu/*.asm \
-								$(KERNEL_DIR)/fs/*.asm )
+								$(KERNEL_DIR)/fs/*.asm \
+								$(KERNEL_DIR)/process/*.asm )
 KERNEL_ASM_OBJECTS=$(patsubst $(KERNEL_DIR)/%.asm,${BUILD_DIR}/kernel.dir/%.asm.o,${KERNEL_ASM_SOURCES})
 
 build: make_dir compile_kernel boot_builder boot_stage_build
 	make -C ./tools/disk/
 #	make mbr_build_disk
 	make build_disk
-	make run_test
 
 build_os:
 #	dd if=/dev/zero of=$(OUTPUT_OS) bs=$(BSS_COUNT) count=$(SIZE_DISK)
@@ -82,6 +83,7 @@ make_build_kernel_dir:
 	mkdir -p $(BUILD_DIR)/kernel.dir/driver
 	mkdir -p $(BUILD_DIR)/kernel.dir/cpu
 	mkdir -p $(BUILD_DIR)/kernel.dir/fs
+	mkdir -p $(BUILD_DIR)/kernel.dir/process
 
 clean:
 	rm -rf build
@@ -114,7 +116,8 @@ build_disk:
 	dd if=$(BUILD_DIR)/boot.dir/boot.bin of=./bootvol.img bs=1 seek=62 skip=62 count=448 conv=notrunc
 	dd if=$(BUILD_DIR)/boot.dir/loadstage.bin of=./bootvol.img bs=512 seek=3 conv=notrunc
 	mcopy -i ./bootvol.img $(BUILD_DIR)/boot.stage.dir/bootstage.bin ::BOOTX32.BIN
-	mcopy -i ./bootvol.img build/kernel.elf ::KERNEL.ELF
+	mcopy -i ./bootvol.img build/kernel.elf ::KERNEL.elf
+	mcopy -i ./bootvol.img text.txt		::TEXT.TXT
 
 	./tools/disk/disk --open ./os.img --part boot fat16 -bs 512 -st 1 -et 40960 --data ./bootvol.img
 	./tools/disk/disk --open ./os.img --part fat32 -bs 512 -st 40961 -et 242144 --data ./data.img

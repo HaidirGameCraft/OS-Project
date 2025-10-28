@@ -8,11 +8,22 @@
 #include <term.h>
 #include <kernel.h>
 #include <fs.h>
+#include <process/task.h>
 #include "../boot/boot_stage/include/boot_header.h"
 
 int log_buffer_index = 0;
 char log_buffer[1024] = {0};
 void keyboard_callback(u8 button, char scancode, u8 flags);
+
+void test1() {
+    printf("Hello ");
+    task_kill();
+}
+
+void test2() {
+    printf("World\n");
+    task_kill();
+}
 
 // the entry point after callig from entry.asm
 void kernel_main( struct boot_header* bootheader ) {
@@ -24,17 +35,35 @@ void kernel_main( struct boot_header* bootheader ) {
 
     page_initialize();
     gdt_initialize();
-    idt_initialize();
     alloc_initialize();
+    task_initialize();
+    idt_initialize();
 
     
     Keyboard_AddCall( keyboard_callback );
-    printf("OS Project\n Creator By: Haidir\n");
+    printf("OS Project\nCreator By: Haidir\n");
     
     // DIsk
     OpenMBRDisk();
     partition_table_t* partition = OpenMBRPart(0);
+    OpenFATVolume( partition );
+    struct fat_directory_t* dir = GetFATFile("TEXT    TXT");
 
+    char* buffer = (char*) malloc( dir->filesize );
+    ReadFATFile(dir, buffer, dir->filesize);
+    printf("%s\n", buffer);
+
+    uint8_t* stack = (uint8_t*) malloc( 4096 );
+    create_task( test1, (u32) stack + 4096 );
+
+    uint8_t* stack1 = (uint8_t*) malloc( 4096 );
+    create_task( test2, (u32) stack1 + 4096 );
+
+    printf("Go to other Task\n");
+    printf("Return to Kernel\n");
+
+
+    free( dir );
     return;
 };
 

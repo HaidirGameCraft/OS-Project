@@ -20,3 +20,9 @@ void* malloc( size_t size );
  * - clear all data and make the location as free or available for next malloc
  */
 void free( void* ptr );
+
+/**
+ * sbrk()
+ * - resize the heap
+ */
+void sbrk(size_t size);
