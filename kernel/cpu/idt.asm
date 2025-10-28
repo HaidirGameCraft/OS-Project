@@ -39,18 +39,18 @@ __irq%2:    cli
             jmp irq_handle_stub
 %endmacro
 
-isr_handle_stub:    PUSHALL
+isr_handle_stub:    pusha
                     [extern isr_handle]
                     call isr_handle
-                    POPALL
+                    popa
                     add esp, 8
                     sti
                     iretd
 
-irq_handle_stub:    PUSHALL
+irq_handle_stub:    pusha
                     [extern irq_handle]
                     call irq_handle
-                    POPALL
+                    popa
                     add esp, 8
                     sti
                     iretd
@@ -62,6 +62,7 @@ syscall_handle:         PUSHALL
                         call syscall_interrupt
                         mov dword [syscall_return_val], eax
                         POPALL
+                        mov eax, dword [syscall_return_val]
                         iretd
 
 isr_stub 0

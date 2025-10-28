@@ -17,3 +17,6 @@ git clone https://github.com/HaidirGameCraft/OS-Project.git
 cd OS-Project
 make
 ```
+
+# Documentation
+The Google Docs Link of [Syscall Table HaOS](https://docs.google.com/document/d/15RomBGVOO2VIr0EKXraPNZSoiKHP2xfWIWsqxr5abbM/edit?usp=sharing)

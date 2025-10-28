@@ -31,6 +31,12 @@ struct page_directory_t {
 void page_initialize();
 
 /**
+ * page_getdir()
+ * - finding and returning the current page diectory based on CR3
+ */
+extern addr_t page_getdir();
+
+/**
  * page_map()
  * - mapped the address to available physical address
  */
@@ -47,6 +53,12 @@ void page_pmap(u32 physicl_address, u8 page_attributes);
  * - mapped the virtual address to physical address
  */
 void page_vmap(u32 virtual_address, u32 physical_address, u8 page_attributes, size_t size );
+
+/**
+ * page_unmap()
+ * - unmapped the virtual address
+ */
+void page_unmap(u32 virtual_address, size_t size );
 
 /**
  * page_enable()

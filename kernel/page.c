@@ -26,6 +26,7 @@ u32 page_alloc();
  */
 u32  page_address_is_available( u32 addr );
 void page_set_address( u32 addr );
+void page_set_free_address( u32 addr );
 
 /**
  * page_find_available_address()
@@ -110,6 +111,7 @@ void page_initialize() {
     page_bitmap[0] |= 0b11111;
 }
 
+
 void page_map(u32 address, u8 page_attributes, size_t size ) {
     int size_page = ((int)( size / PAGE_SIZE)) + 1;
 
@@ -178,6 +180,38 @@ void page_vmap(u32 virtual_address, u32 physical_address, u8 page_attributes, si
     __asm__ volatile("invlpg (%0)" :: "r"(virtual_address) : "memory");
 }
 
+
+void page_unmap(u32 virtual_address, size_t size )
+{
+    struct page_directory_t* cpdir = (struct page_directory_t*) page_getdir();
+    if( cpdir == NULL )
+    {
+        printf("[PAGING ERROR] cpdir is not served\n");
+        return;
+    }
+
+    int size_page = ((int)( size / PAGE_SIZE)) + 1;
+
+    for(u32 i = 0; i < size_page; i++) {
+        u32 addr = ( virtual_address & ~0xFFF ) + i * PAGE_SIZE;
+
+        u32 pd = PD_INDEX( addr );
+        u32 pt = PT_INDEX( addr );
+        if( !(page_directory->entries[pd] & PAGE_ATTR_PRESENT) )
+            continue;   // continue the forloop when the page_directory->entries[pd] is not have the page_table
+
+        struct page_table_t* page_table = (struct page_table_t*)( page_directory->entries[pd] & ~0xFFF );
+        u32 physical_address = page_table->entries[pt] & ~0xFFF;
+        if( physical_address != 0 )
+            page_set_free_address( physical_address );
+        
+        page_table->entries[pt] = 0x00000000;
+    }
+    __asm__ volatile("invlpg (%0)" :: "r"(virtual_address) : "memory");
+
+}
+
+
 u32 page_alloc() {
     u32 addr = page_find_available_address();
     if( addr == 0 )
@@ -222,6 +256,10 @@ u32  page_address_is_available( u32 addr ) {
 
 void page_set_address( u32 addr ) {
     page_bitmap[ ((int)( (addr >> 12) / 8 )) ] |= 1 << ((addr >> 12) % 8);
+}
+
+void page_set_free_address( u32 addr ) {
+    page_bitmap[ ((int)( (addr >> 12) / 8 )) ] = ~(0 << ((addr >> 12) % 8));
 }
 
 u32  page_find_available_address() {
